@@ -113,17 +113,13 @@ for index, row in excel_sheet2.iterrows():
             if not placementIndex2:
                 if DEBUGGING:
                     print('list is empty')
-                test1 = ''
-                test2 = ''
+                ERPProgrammanummer = ''
+                ERPTijd = ''
             else:
-                test1 = data.iat[placementIndex2[0], 0]
-                test2 = data.iat[placementIndex2[0], 1]
-            if 1:
-                test3 = GrossRunTime
-                test4 = plaatNr
-                test5 = programmaNummer
-                new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: test1, EXPORT_COLUMN_ERP_TIJD: test2, EXPORT_COLUMN_LASER_TIJD: test3, EXPORT_COLUMN_LASER_PLAAT: test4, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: test5}
-                data.loc[len(data)+1] = new_row
+                ERPProgrammanummer = data.iat[placementIndex2[0], 0]
+                ERPTijd = data.iat[placementIndex2[0], 1]
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            data.loc[len(data)+1] = new_row
     else:
         if DEBUGGING:
             print("not a matched number")
