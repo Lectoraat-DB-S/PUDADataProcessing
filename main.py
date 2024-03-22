@@ -14,7 +14,10 @@ if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
 
 # declare constants
 FILE_LOCATION = "Data.xlsx"
-FILE_NAME = "result2.xlsx"
+if MACHINE_NUMBER == 3:
+    FILE_NAME = "resultLaser3.xlsx"
+elif MACHINE_NUMBER == 4:
+    FILE_NAME = "resultLaser4.xlsx"
 
 # sheet names of the imported file
 EXCEL_SHEET_NAME1 = "ERP"
@@ -27,7 +30,7 @@ elif MACHINE_NUMBER == 4:
 # sheet 1
 IMPORT_COLUMN_ERP_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
-#sheet 2
+# sheet 2
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
 IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
