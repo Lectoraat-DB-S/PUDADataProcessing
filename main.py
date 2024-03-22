@@ -8,6 +8,8 @@ DEBUGGING = 0
 MACHINE_NUMBER = 4
 if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     print("wrong machine number used")
+    print("acceptable machine numbers are 3 and 4")
+    print("shutting down, toedeloe")
     exit()
 
 # declare constants
