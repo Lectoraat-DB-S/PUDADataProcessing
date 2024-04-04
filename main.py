@@ -74,14 +74,6 @@ for index, row in excel_sheet1.iterrows():
     placementIndex1 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]].tolist()
     data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] = data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] + row[IMPORT_COLUMN_ERP_TIJD]
 
-# for indexx, row in excel_sheet2.iterrows():
-#     if isinstance(row[IMPORT_COLUMN_LASER_TIJD], pd._libs.tslibs.nattype.NaTType):
-#         print(row[IMPORT_COLUMN_LASER_TIJD])
-#         print(row[IMPORT_COLUMN_LASER_PLAAT])
-#         excel_sheet2.drop(indexx, axis='index')
-
-# excel_sheet2.to_excel("testData.xlsx")
-
 # variables used for finding all usable data is Laser sheet
 lastProgramNumber = 0
 programmaNummer = 0
@@ -92,13 +84,11 @@ plaatNr = 0
 
 # fill empty cells with '' because python can't handle NaN
 excel_sheet2 = excel_sheet2.fillna('')
-# excel_sheet2.to_excel("testDataV2.xlsx")
 
+# clean up of the data, if there are rows that don't contain a gross time, plate and program number then delete these because the clog the algorithm
 for index, row in excel_sheet2.iterrows():
     if row[IMPORT_COLUMN_LASER_TIJD] == '' and row[IMPORT_COLUMN_LASER_PLAAT] == '' and row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER] == '':
         excel_sheet2.drop(index, axis='index', inplace=True)
-
-# excel_sheet2.to_excel("tempData.xlsx")
 
 # variable used for debugging
 counted = 0
