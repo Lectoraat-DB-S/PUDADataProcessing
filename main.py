@@ -162,15 +162,11 @@ for index, row in excel_sheet2.iterrows():
             new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
-    # if not, it means we switched programnumber and by definition started from plat 0 (this might be incorrect and needs to be checked with the data)
-    # elif LastGrossRunTime == 'None':
-    #     print("this is fucking bullshit")
-
-    # elif LastGrossRunTime != '' and LastGrossRunTime != 'None':
+    # the same program number wasn't found
     else:
         if DEBUGGING:
             print("not a matched program number")
-            print(LastGrossRunTime)
+        # if it doesn't have a time then we don't need to safe it
         if LastGrossRunTime == '':
             lastProgramNumber = row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER]
             if row[IMPORT_COLUMN_LASER_PLAAT] != '':
@@ -178,12 +174,10 @@ for index, row in excel_sheet2.iterrows():
             else:
                 LastPlaatNr = 0
             LastGrossRunTime = 0
+        # if it does have a time then we need to safe it
         elif LastGrossRunTime != '':
-            # print("what")
-            # print(lastProgramNumber)
-            # print(LastPlaatNr)
-            # print(LastGrossRunTime)
             plaatNr = LastPlaatNr
+            # in case the we continue with a plate that isn't 0
             if row[IMPORT_COLUMN_LASER_PLAAT] != '':
                 LastPlaatNr = row[IMPORT_COLUMN_LASER_PLAAT]
             else:
@@ -219,6 +213,7 @@ for index, row in excel_sheet2.iterrows():
         else:
             counted = counted + 1
 
+# this removes the unnecessary lines at the beginning of the file that are empty
 for index, row in data.iterrows():
     if row[EXPORT_COLUMN_LASER_PLAAT] == 0 and row[EXPORT_COLUMN_LASER_PROGRAMMANUMMER] == 0 and row[EXPORT_COLUMN_LASER_TIJD] == 0:
         data.drop(index, axis='index', inplace=True)
