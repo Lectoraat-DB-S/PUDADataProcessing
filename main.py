@@ -30,6 +30,7 @@ elif MACHINE_NUMBER == 4:
 # sheet 1
 IMPORT_COLUMN_ERP_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
+IMPORT_COLUMN_ERP_MATERIAAL = 'MateriaalCode'
 # sheet 2
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
@@ -38,14 +39,17 @@ IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
 # names of the exported columns
 EXPORT_COLUMN_ERP_PROGRAMMANUMMER = 'ERP Programma Nummer'
 EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
+EXPORT_COLUMN_ERP_MATERIAAL = 'ERP MateriaalCode'
 if MACHINE_NUMBER == 3:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 3 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 3 Plaatnr'
     EXPORT_COLUMN_LASER_PROGRAMMANUMMER = 'Laser 3 ProgrammaNaam'
+    EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 3 Actual Time Difference'
 elif MACHINE_NUMBER == 4:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 4 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 4 Plaatnr'
     EXPORT_COLUMN_LASER_PROGRAMMANUMMER = 'Laser 4 ProgrammaNaam'
+    EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 4 Actual Time Difference'
 
 # testing constant
 COUNT_THE_AMOUNT = 260 + 2
@@ -55,7 +59,7 @@ excel_sheet1 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME1)
 # Laser excel sheet
 excel_sheet2 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME2)
 # dataframe that will be filled we the results
-data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
+data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
 
 # indexing and checking for removing all duplicate programnumbers
 index_new_data = 0
@@ -65,14 +69,17 @@ last_programmanummer = 0
 for index, row in excel_sheet1.iterrows():
     if row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] != last_programmanummer:
         last_programmanummer = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]
-        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0
+        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0
         index_new_data = index_new_data + 1
 
-# add total time found in ERP sheet to all the programnumbers found in ERP sheet
+# add total time and material found in ERP sheet to all the programnumbers found in ERP sheet
 for index, row in excel_sheet1.iterrows():
     # index for knowing where to find the data with the correct programnumber in the ERP sheet
     placementIndex1 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]].tolist()
+    # add time to existing time in the data set
     data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] = data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] + row[IMPORT_COLUMN_ERP_TIJD]
+    # add material code to the program number
+    data.loc[placementIndex1, EXPORT_COLUMN_ERP_MATERIAAL] = row[IMPORT_COLUMN_ERP_MATERIAAL]
 
 # variables used for finding all usable data is Laser sheet
 lastProgramNumber = 0
@@ -143,13 +150,21 @@ for index, row in excel_sheet2.iterrows():
                     print('list is empty')
                 ERPProgrammanummer = ''
                 ERPTijd = ''
+                ERPMateriaal = ''
             # in case the same programnumber was found, fill the cells with the correct data
             else:
                 ERPProgrammanummer = data.iat[placementIndex2[0], 0]
                 ERPTijd = data.iat[placementIndex2[0], 1]
+                ERPMateriaal = data.iat[placementIndex2[0], 2]
+
+            # calculate the time difference between expected and actual
+            if ERPTijd != '':
+                timeDifference = GrossRunTime - ERPTijd
+            else:
+                timeDifference = 'No ERP time'
 
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
     # the same program number wasn't found
@@ -186,13 +201,21 @@ for index, row in excel_sheet2.iterrows():
                     print('list is empty')
                 ERPProgrammanummer = ''
                 ERPTijd = ''
+                ERPMateriaal = ''
             # in case the same programnumber was found, fill the cells with the correct data
             else:
                 ERPProgrammanummer = data.iat[placementIndex2[0], 0]
                 ERPTijd = data.iat[placementIndex2[0], 1]
+                ERPMateriaal = data.iat[placementIndex2[0], 2]
+
+            # calculate the time difference between expected and actual
+            if ERPTijd != '':
+                timeDifference = GrossRunTime - ERPTijd
+            else:
+                timeDifference = 'No ERP time'
 
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
 
