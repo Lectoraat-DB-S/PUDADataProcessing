@@ -197,15 +197,18 @@ for index, row in excel_sheet3.iterrows():
                             if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
                                 # print("hoeray")
                                 avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
-                        # calculate the average
-                        # avgTimeDistance = ERPTijd/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*ERPStuks)
-
-                # print(ERPProgrammanummer)
-                # print(avgTimeDistance)
-                # exit()
 
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_ERP_STUKS: ERPStuks, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
+                       EXPORT_COLUMN_ERP_TIJD: ERPTijd,
+                       EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal,
+                       EXPORT_COLUMN_ERP_STUKS: ERPStuks,
+                       EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
+                       EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
+                       EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_PLAAT: plaatNr,
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
     # the same program number wasn't found
@@ -276,7 +279,16 @@ for index, row in excel_sheet3.iterrows():
                                 avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
 
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_ERP_STUKS: ERPStuks, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
+                       EXPORT_COLUMN_ERP_TIJD: ERPTijd,
+                       EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal,
+                       EXPORT_COLUMN_ERP_STUKS: ERPStuks,
+                       EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
+                       EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
+                       EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_PLAAT: plaatNr,
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
 
