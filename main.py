@@ -21,17 +21,24 @@ elif MACHINE_NUMBER == 4:
 
 # sheet names of the imported file
 EXCEL_SHEET_NAME1 = "ERP"
+EXCEL_SHEET_NAME2 = "WICAM"
 if MACHINE_NUMBER == 3:
-    EXCEL_SHEET_NAME2 = "Laser 3"
+    EXCEL_SHEET_NAME3 = "Laser 3"
 elif MACHINE_NUMBER == 4:
-    EXCEL_SHEET_NAME2 = "Laser4"
+    EXCEL_SHEET_NAME3 = "Laser4"
 
 # names of the columns from the imported file
 # sheet 1
 IMPORT_COLUMN_ERP_PROGRAMMANUMMER = 'Programmanummer'
-IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
 IMPORT_COLUMN_ERP_MATERIAAL = 'MateriaalCode'
+IMPORT_COLUMN_ERP_ORDER_BON = 'OrderBon'
+IMPORT_COLUMN_ERP_STUKS = 'StuksPerPlaat'
+IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
 # sheet 2
+IMPORT_COLUMN_WICAM_PROGRAMMANUMMER = 'Programmanummer'
+IMPORT_COLUMN_WICAM_ORDER_BON = 'OrderBon'
+IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
+# sheet 3
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
 IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
@@ -40,6 +47,8 @@ IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
 EXPORT_COLUMN_ERP_PROGRAMMANUMMER = 'ERP Programma Nummer'
 EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
 EXPORT_COLUMN_ERP_MATERIAAL = 'ERP MateriaalCode'
+EXPORT_COLUMN_ERP_STUKS = 'ERP Stuks'
+EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance'
 if MACHINE_NUMBER == 3:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 3 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 3 Plaatnr'
@@ -55,11 +64,15 @@ elif MACHINE_NUMBER == 4:
 COUNT_THE_AMOUNT = 260 + 2
 
 # ERP excel sheet
-excel_sheet1 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME1)
-# Laser excel sheet
+excel_sheet1 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME1, converters={IMPORT_COLUMN_ERP_ORDER_BON: str})
+# WICAM excel sheet
 excel_sheet2 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME2)
+# Laser excel sheet
+excel_sheet3 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME3)
 # dataframe that will be filled we the results
-data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
+data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_ERP_STUKS, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
+
+excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON] = excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON].str.replace('.', '-')
 
 # indexing and checking for removing all duplicate programnumbers
 index_new_data = 0
@@ -69,7 +82,7 @@ last_programmanummer = 0
 for index, row in excel_sheet1.iterrows():
     if row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] != last_programmanummer:
         last_programmanummer = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]
-        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0
+        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0, 0, 0
         index_new_data = index_new_data + 1
 
 # add total time and material found in ERP sheet to all the programnumbers found in ERP sheet
@@ -78,6 +91,8 @@ for index, row in excel_sheet1.iterrows():
     placementIndex1 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]].tolist()
     # add time to existing time in the data set
     data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] = data.loc[placementIndex1, EXPORT_COLUMN_ERP_TIJD] + row[IMPORT_COLUMN_ERP_TIJD]
+    # add time to existing time in the data set
+    data.loc[placementIndex1, EXPORT_COLUMN_ERP_STUKS] = data.loc[placementIndex1, EXPORT_COLUMN_ERP_STUKS] + row[IMPORT_COLUMN_ERP_STUKS]
     # add material code to the program number
     data.loc[placementIndex1, EXPORT_COLUMN_ERP_MATERIAAL] = row[IMPORT_COLUMN_ERP_MATERIAAL]
 
@@ -90,19 +105,19 @@ LastPlaatNr = 0
 plaatNr = 0
 
 # fill empty cells with '' because python can't handle NaN
-excel_sheet2 = excel_sheet2.fillna('')
+excel_sheet3 = excel_sheet3.fillna('')
 
 # clean up of the data, if there are rows that don't contain a gross time, plate and program number then delete these because the clog the algorithm
-for index, row in excel_sheet2.iterrows():
+for index, row in excel_sheet3.iterrows():
     if row[IMPORT_COLUMN_LASER_TIJD] == '' and row[IMPORT_COLUMN_LASER_PLAAT] == '' and row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER] == '':
-        excel_sheet2.drop(index, axis='index', inplace=True)
+        excel_sheet3.drop(index, axis='index', inplace=True)
 
 # variable used for debugging
 counted = 0
 
 # run through all laser data and match programnumber to time and to the plate in the laser sheet,
 # also match the data from the ERP to it if there is an programnumber in the ERP data that matches a programnumber in the laser data
-for index, row in excel_sheet2.iterrows():
+for index, row in excel_sheet3.iterrows():
     if DEBUGGING:
         print("start")
     # for the first run safe a number to prevent skipping
@@ -151,11 +166,13 @@ for index, row in excel_sheet2.iterrows():
                 ERPProgrammanummer = ''
                 ERPTijd = ''
                 ERPMateriaal = ''
+                ERPStuks = ''
             # in case the same programnumber was found, fill the cells with the correct data
             else:
                 ERPProgrammanummer = data.iat[placementIndex2[0], 0]
                 ERPTijd = data.iat[placementIndex2[0], 1]
                 ERPMateriaal = data.iat[placementIndex2[0], 2]
+                ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
             if ERPTijd != '':
@@ -163,8 +180,35 @@ for index, row in excel_sheet2.iterrows():
             else:
                 timeDifference = 'No ERP time'
 
+            # variable to safe the average in
+            avgTimeDistance = 0
+            # add average time per distance
+            # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
+            if ERPProgrammanummer != '':
+                # run through the WICAM sheet
+                for index, row in excel_sheet2.iterrows():
+                    #  check to see if there is a matching programnumber with the laser machine
+                    if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
+                        placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
+                        # print(placementIndex3)
+                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
+                        for i in placementIndex3:
+                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
+                            if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
+                                # print("hoeray")
+                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
+                       EXPORT_COLUMN_ERP_TIJD: ERPTijd,
+                       EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal,
+                       EXPORT_COLUMN_ERP_STUKS: ERPStuks,
+                       EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
+                       EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
+                       EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_PLAAT: plaatNr,
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
     # the same program number wasn't found
@@ -202,11 +246,13 @@ for index, row in excel_sheet2.iterrows():
                 ERPProgrammanummer = ''
                 ERPTijd = ''
                 ERPMateriaal = ''
+                ERPStuks = ''
             # in case the same programnumber was found, fill the cells with the correct data
             else:
                 ERPProgrammanummer = data.iat[placementIndex2[0], 0]
                 ERPTijd = data.iat[placementIndex2[0], 1]
                 ERPMateriaal = data.iat[placementIndex2[0], 2]
+                ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
             if ERPTijd != '':
@@ -214,8 +260,35 @@ for index, row in excel_sheet2.iterrows():
             else:
                 timeDifference = 'No ERP time'
 
+            # variable to safe the average in
+            avgTimeDistance = 0
+            # add average time per distance
+            # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
+            if ERPProgrammanummer != '':
+                # run through the WICAM sheet
+                for index, row in excel_sheet2.iterrows():
+                    #  check to see if there is a matching programnumber with the laser machine
+                    if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
+                        placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
+                        # print(placementIndex3)
+                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
+                        for i in placementIndex3:
+                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
+                            if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
+                                # print("hoeray")
+                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+
             # create the new row that will have to be added to the dataframe
-            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer, EXPORT_COLUMN_ERP_TIJD: ERPTijd, EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal, EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference, EXPORT_COLUMN_LASER_TIJD: GrossRunTime, EXPORT_COLUMN_LASER_PLAAT: plaatNr, EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
+                       EXPORT_COLUMN_ERP_TIJD: ERPTijd,
+                       EXPORT_COLUMN_ERP_MATERIAAL: ERPMateriaal,
+                       EXPORT_COLUMN_ERP_STUKS: ERPStuks,
+                       EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
+                       EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
+                       EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_PLAAT: plaatNr,
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+            
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
 
