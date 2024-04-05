@@ -35,3 +35,5 @@ Data.xlsx
       ├── PlaatNr
       └── ProgrammaNaam
 ```
+
+![alt text](https://github.com/Lectoraat-DB-S/PUDADataProcessing/blob/main/PudaDataProcessing.png)
