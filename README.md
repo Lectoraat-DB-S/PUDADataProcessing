@@ -15,23 +15,23 @@ The code only works for the excel file that was given. If the format, naming of 
 The import names in the excel file that where given were as follows:
 
 ```
-Data.xlsx\
-  ├── ERP\
-  │   ├── Programmanummer\
-  │   ├── MateriaalCode\
-  │   ├── OrderBon\
-  │   ├── StuksPerPlaat\
-  │   └── TijdBonPerPlaat\
-  ├── WICAM\
-  │   ├── Programmanummer\
-  │   ├── OrderBon\
-  │   └── SnijlengtePerStuk\
-  ├── Laser 3\
-  │   ├── GrossRunTime\
-  │   ├── PlaatNr\
-  │   └── ProgrammaNaam\
-  └── Laser4\
-      ├── GrossRunTime\
-      ├── PlaatNr\
-      └── ProgrammaNaam\
+Data.xlsx
+  ├── ERP
+  │   ├── Programmanummer
+  │   ├── MateriaalCode
+  │   ├── OrderBon
+  │   ├── StuksPerPlaat
+  │   └── TijdBonPerPlaat
+  ├── WICAM
+  │   ├── Programmanummer
+  │   ├── OrderBon
+  │   └── SnijlengtePerStuk
+  ├── Laser 3
+  │   ├── GrossRunTime
+  │   ├── PlaatNr
+  │   └── ProgrammaNaam
+  └── Laser4
+      ├── GrossRunTime
+      ├── PlaatNr
+      └── ProgrammaNaam
 ```
