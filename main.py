@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 # put a 1 if debugging should be enabled
 DEBUGGING = 0
 MACHINE_NUMBER = 4
+NEW_DATA = 0
 if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     print("wrong machine number used")
     print("acceptable machine numbers are 3 and 4")
@@ -13,42 +14,75 @@ if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     exit()
 
 # declare constants
-FILE_LOCATION = "Data.xlsx"
+if NEW_DATA:
+    FILE_LOCATION = "Data_export_alles_vanaf_2023.xlsx"
+else:
+    FILE_LOCATION = "Data.xlsx"
 if MACHINE_NUMBER == 3:
-    FILE_NAME = "resultLaser3V2.xlsx"
+    if NEW_DATA:
+        FILE_NAME = "result_laser_3_vanaf_2023.xlsx"
+    else:
+        FILE_NAME = "resultLaser3V5.xlsx"
 elif MACHINE_NUMBER == 4:
-    FILE_NAME = "resultLaser4V2.xlsx"
+    if NEW_DATA:
+        FILE_NAME = "result_laser_4_vanaf_2023.xlsx"
+    else:
+        FILE_NAME = "resultLaser4V5.xlsx"
 
 # sheet names of the imported file
-EXCEL_SHEET_NAME1 = "ERP"
-EXCEL_SHEET_NAME2 = "WICAM"
+if NEW_DATA:
+    EXCEL_SHEET_NAME1 = "RidderiQ"
+else:
+    EXCEL_SHEET_NAME1 = "ERP"
+if NEW_DATA:
+    EXCEL_SHEET_NAME2 = "WiCAM"
+else:
+    EXCEL_SHEET_NAME2 = "WICAM"
 if MACHINE_NUMBER == 3:
-    EXCEL_SHEET_NAME3 = "Laser 3"
+    if NEW_DATA:
+        EXCEL_SHEET_NAME3 = "ThingsBoard laser 3"
+    else:
+        EXCEL_SHEET_NAME3 = "Laser 3"
 elif MACHINE_NUMBER == 4:
-    EXCEL_SHEET_NAME3 = "Laser4"
+    if NEW_DATA:
+        EXCEL_SHEET_NAME3 = "ThingsBoard laser 4"
+    else:
+        EXCEL_SHEET_NAME3 = "Laser4"
 
 # names of the columns from the imported file
-# sheet 1
+# sheet 1 ERP
 IMPORT_COLUMN_ERP_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_ERP_MATERIAAL = 'MateriaalCode'
 IMPORT_COLUMN_ERP_ORDER_BON = 'OrderBon'
 IMPORT_COLUMN_ERP_STUKS = 'StuksPerPlaat'
-IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
-# sheet 2
+if NEW_DATA:
+    IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat (s)'
+else:
+    IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
+# sheet 2 WICAM
 IMPORT_COLUMN_WICAM_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_WICAM_ORDER_BON = 'OrderBon'
-IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
-# sheet 3
+if NEW_DATA:
+    IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk (mm)'
+else:
+    IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
+# sheet 3 LASER
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
 IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
 
 # names of the exported columns
 EXPORT_COLUMN_ERP_PROGRAMMANUMMER = 'ERP Programma Nummer'
-EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
+if NEW_DATA:
+    EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat (s)'
+else:
+    EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
 EXPORT_COLUMN_ERP_MATERIAAL = 'ERP MateriaalCode'
 EXPORT_COLUMN_ERP_STUKS = 'ERP Stuks'
-EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance'
+if NEW_DATA:
+    EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance (s/m)'
+else:
+    EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance'
 if MACHINE_NUMBER == 3:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 3 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 3 Plaatnr'
@@ -182,6 +216,8 @@ for index, row in excel_sheet3.iterrows():
 
             # variable to safe the average in
             avgTimeDistance = 0
+            totalSnijlengte = 0
+            wicamCheck = 0
             # add average time per distance
             # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
             if ERPProgrammanummer != '':
@@ -190,13 +226,16 @@ for index, row in excel_sheet3.iterrows():
                     #  check to see if there is a matching programnumber with the laser machine
                     if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
                         placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
-                        # print(placementIndex3)
-                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
                         for i in placementIndex3:
-                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
                             if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
-                                # print("hoeray")
-                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+                                wicamCheck = 1
+                                totalSnijlengte = totalSnijlengte + ((row[IMPORT_COLUMN_WICAM_SNIJLENGTE]/1000)*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS])
+                if wicamCheck:
+                    avgTimeDistance = ERPTijd/totalSnijlengte
+                else:
+                    avgTimeDistance = 'No Wicam programnumber'
+            else:
+                avgTimeDistance = 'No ERP programnumber'
 
             # create the new row that will have to be added to the dataframe
             new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
@@ -262,6 +301,8 @@ for index, row in excel_sheet3.iterrows():
 
             # variable to safe the average in
             avgTimeDistance = 0
+            totalSnijlengte = 0
+            wicamCheck = 0
             # add average time per distance
             # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
             if ERPProgrammanummer != '':
@@ -270,13 +311,16 @@ for index, row in excel_sheet3.iterrows():
                     #  check to see if there is a matching programnumber with the laser machine
                     if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
                         placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
-                        # print(placementIndex3)
-                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
                         for i in placementIndex3:
-                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
                             if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
-                                # print("hoeray")
-                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+                                wicamCheck = 1
+                                totalSnijlengte = totalSnijlengte + ((row[IMPORT_COLUMN_WICAM_SNIJLENGTE]/1000)*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS])
+                if wicamCheck:
+                    avgTimeDistance = ERPTijd/totalSnijlengte
+                else:
+                    avgTimeDistance = 'No Wicam programnumber'
+            else:
+                avgTimeDistance = 'No ERP programnumber'
 
             # create the new row that will have to be added to the dataframe
             new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
