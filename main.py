@@ -5,8 +5,8 @@ from openpyxl import load_workbook
 # setup constants
 # put a 1 if debugging should be enabled
 DEBUGGING = 0
-MACHINE_NUMBER = 4
-NEW_DATA = 0
+MACHINE_NUMBER = 3
+NEW_DATA = 1
 if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     print("wrong machine number used")
     print("acceptable machine numbers are 3 and 4")
@@ -209,10 +209,18 @@ for index, row in excel_sheet3.iterrows():
                 ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
-            if ERPTijd != '':
+            if ERPTijd != '' and GrossRunTime != '':
+                # print(programmaNummer)
+                # print(ERPProgrammanummer)
+                # print(type(GrossRunTime))
+                # print(GrossRunTime)
+                # print(type(ERPTijd))
+                # print(ERPTijd)
                 timeDifference = GrossRunTime - ERPTijd
-            else:
+            elif ERPTijd == '':
                 timeDifference = 'No ERP time'
+            elif GrossRunTime == '':
+                timeDifference = 'No GrossRunTime'
 
             # variable to safe the average in
             avgTimeDistance = 0
@@ -294,7 +302,7 @@ for index, row in excel_sheet3.iterrows():
                 ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
-            if ERPTijd != '':
+            if ERPTijd != '' and GrossRunTime != '':
                 timeDifference = GrossRunTime - ERPTijd
             else:
                 timeDifference = 'No ERP time'
