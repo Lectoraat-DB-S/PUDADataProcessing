@@ -15,8 +15,8 @@ The code only works for the excel file that was given. If the format, naming of 
 The import names in the excel file that where given were as follows:
 
 ```
-Data.xlsx
-  ├── ERP
+Data_export_alles_vanaf_2023.xlsx
+  ├── RidderiQ
   │   ├── Programmanummer
   │   ├── MateriaalCode
   │   ├── OrderBon
@@ -26,14 +26,20 @@ Data.xlsx
   │   ├── Programmanummer
   │   ├── OrderBon
   │   └── SnijlengtePerStuk
-  ├── Laser 3
+  ├── ThingsBoard laser 3
+  │   ├── Timestamp
   │   ├── GrossRunTime
   │   ├── PlaatNr
-  │   └── ProgrammaNaam
-  └── Laser4
+  │   ├── ProgrammaNaam
+  │   ├── NetProcessingTime
+  │   └── NetRunTime
+  └── ThingsBoard laser4
+      ├── Timestamp
       ├── GrossRunTime
       ├── PlaatNr
-      └── ProgrammaNaam
+      ├── ProgrammaNaam
+      ├── NetProcessingTime
+      └── NetRunTime
 ```
 
 ![alt text](https://github.com/Lectoraat-DB-S/PUDADataProcessing/blob/main/PudaDataProcessing.png)
