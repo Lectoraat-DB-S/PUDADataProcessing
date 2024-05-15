@@ -5,7 +5,8 @@ from openpyxl import load_workbook
 # setup constants
 # put a 1 if debugging should be enabled
 DEBUGGING = 0
-MACHINE_NUMBER = 4
+MACHINE_NUMBER = 3
+NEW_DATA = 1
 if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     print("wrong machine number used")
     print("acceptable machine numbers are 3 and 4")
@@ -13,55 +14,97 @@ if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     exit()
 
 # declare constants
-FILE_LOCATION = "Data.xlsx"
+if NEW_DATA:
+    FILE_LOCATION = "Data_export_alles_vanaf_2023.xlsx"
+else:
+    FILE_LOCATION = "Data.xlsx"
 if MACHINE_NUMBER == 3:
-    FILE_NAME = "resultLaser3V2.xlsx"
+    if NEW_DATA:
+        FILE_NAME = "result_laser_3_vanaf_2023.xlsx"
+    else:
+        FILE_NAME = "resultLaser3V5.xlsx"
 elif MACHINE_NUMBER == 4:
-    FILE_NAME = "resultLaser4V2.xlsx"
+    if NEW_DATA:
+        FILE_NAME = "result_laser_4_vanaf_2023.xlsx"
+    else:
+        FILE_NAME = "resultLaser4V5.xlsx"
 
 # sheet names of the imported file
-EXCEL_SHEET_NAME1 = "ERP"
-EXCEL_SHEET_NAME2 = "WICAM"
+if NEW_DATA:
+    EXCEL_SHEET_NAME1 = "RidderiQ"
+else:
+    EXCEL_SHEET_NAME1 = "ERP"
+if NEW_DATA:
+    EXCEL_SHEET_NAME2 = "WiCAM"
+else:
+    EXCEL_SHEET_NAME2 = "WICAM"
 if MACHINE_NUMBER == 3:
-    EXCEL_SHEET_NAME3 = "Laser 3"
+    if NEW_DATA:
+        EXCEL_SHEET_NAME3 = "ThingsBoard laser 3"
+    else:
+        EXCEL_SHEET_NAME3 = "Laser 3"
 elif MACHINE_NUMBER == 4:
-    EXCEL_SHEET_NAME3 = "Laser4"
+    if NEW_DATA:
+        EXCEL_SHEET_NAME3 = "ThingsBoard laser 4"
+    else:
+        EXCEL_SHEET_NAME3 = "Laser4"
 
 # names of the columns from the imported file
-# sheet 1
+# sheet 1 ERP
 IMPORT_COLUMN_ERP_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_ERP_MATERIAAL = 'MateriaalCode'
 IMPORT_COLUMN_ERP_ORDER_BON = 'OrderBon'
 IMPORT_COLUMN_ERP_STUKS = 'StuksPerPlaat'
-IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
-# sheet 2
+if NEW_DATA:
+    IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat (s)'
+else:
+    IMPORT_COLUMN_ERP_TIJD = 'TijdBonPerPlaat'
+# sheet 2 WICAM
 IMPORT_COLUMN_WICAM_PROGRAMMANUMMER = 'Programmanummer'
 IMPORT_COLUMN_WICAM_ORDER_BON = 'OrderBon'
-IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
-# sheet 3
+if NEW_DATA:
+    IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk (mm)'
+else:
+    IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
+# sheet 3 LASER
+IMPORT_COLUMN_LASER_STARTTIME = 'Timestamp'
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
 IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
+IMPORT_COLUMN_LASER_NETPROCESSINGTIME = 'NetProcessingTime'
+IMPORT_COLUMN_LASER_NETRUNTIME = 'NetRunTime'
 
 # names of the exported columns
 EXPORT_COLUMN_ERP_PROGRAMMANUMMER = 'ERP Programma Nummer'
-EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
+if NEW_DATA:
+    EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat (s)'
+else:
+    EXPORT_COLUMN_ERP_TIJD = 'ERP TijdBonPerPlaat'
 EXPORT_COLUMN_ERP_MATERIAAL = 'ERP MateriaalCode'
 EXPORT_COLUMN_ERP_STUKS = 'ERP Stuks'
-EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance'
+if NEW_DATA:
+    EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance (s/m)'
+else:
+    EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE = 'Average time per distance'
 if MACHINE_NUMBER == 3:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 3 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 3 Plaatnr'
     EXPORT_COLUMN_LASER_PROGRAMMANUMMER = 'Laser 3 ProgrammaNaam'
     EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 3 Actual Time Difference'
+    EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING = 'Laser 3 NetProcessingTime'
+    EXPORT_COLUMN_LASER_TIJD_NET_RUN = 'Laser 3 NetRunTime'
+    EXPORT_COLUMN_LASER_STARTTIME = 'Laser 3 Start time'
 elif MACHINE_NUMBER == 4:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 4 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 4 Plaatnr'
     EXPORT_COLUMN_LASER_PROGRAMMANUMMER = 'Laser 4 ProgrammaNaam'
     EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 4 Actual Time Difference'
+    EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING = 'Laser 4 NetProcessingTime'
+    EXPORT_COLUMN_LASER_TIJD_NET_RUN = 'Laser 4 NetRunTime'
+    EXPORT_COLUMN_LASER_STARTTIME = 'Laser 4 Start time'
 
 # testing constant
-COUNT_THE_AMOUNT = 260 + 2
+COUNT_THE_AMOUNT = 120 + 2
 
 # ERP excel sheet
 excel_sheet1 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME1, converters={IMPORT_COLUMN_ERP_ORDER_BON: str})
@@ -70,7 +113,7 @@ excel_sheet2 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME2)
 # Laser excel sheet
 excel_sheet3 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME3)
 # dataframe that will be filled we the results
-data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_ERP_STUKS, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
+data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_ERP_STUKS, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING, EXPORT_COLUMN_LASER_TIJD_NET_RUN, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER, EXPORT_COLUMN_LASER_STARTTIME])
 
 excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON] = excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON].str.replace('.', '-')
 
@@ -82,7 +125,7 @@ last_programmanummer = 0
 for index, row in excel_sheet1.iterrows():
     if row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] != last_programmanummer:
         last_programmanummer = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]
-        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0, 0, 0
+        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         index_new_data = index_new_data + 1
 
 # add total time and material found in ERP sheet to all the programnumbers found in ERP sheet
@@ -101,15 +144,22 @@ lastProgramNumber = 0
 programmaNummer = 0
 LastGrossRunTime = 0
 GrossRunTime = 0
+LastNetProcessingTime = 0
+NetProcessingTime = 0
+LastNetRunTime = 0
+NetRunTime = 0
 LastPlaatNr = 0
 plaatNr = 0
+startTime = 0
+lastStartTime = 0
+changeStartTime = 1
 
 # fill empty cells with '' because python can't handle NaN
 excel_sheet3 = excel_sheet3.fillna('')
 
 # clean up of the data, if there are rows that don't contain a gross time, plate and program number then delete these because the clog the algorithm
 for index, row in excel_sheet3.iterrows():
-    if row[IMPORT_COLUMN_LASER_TIJD] == '' and row[IMPORT_COLUMN_LASER_PLAAT] == '' and row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER] == '':
+    if row[IMPORT_COLUMN_LASER_TIJD] == '' and row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME] == '' and row[IMPORT_COLUMN_LASER_NETRUNTIME] == '' and row[IMPORT_COLUMN_LASER_PLAAT] == '' and row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER] == '':
         excel_sheet3.drop(index, axis='index', inplace=True)
 
 # variable used for debugging
@@ -120,9 +170,14 @@ counted = 0
 for index, row in excel_sheet3.iterrows():
     if DEBUGGING:
         print("start")
+    # record start time of listing
+    if changeStartTime == 1:
+        lastStartTime = row[IMPORT_COLUMN_LASER_STARTTIME]
+        changeStartTime = 0
     # for the first run safe a number to prevent skipping
     if lastProgramNumber == 0:
         lastProgramNumber = row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER]
+        # lastStartTime = row[IMPORT_COLUMN_LASER_STARTTIME]
     if DEBUGGING:
         print("check for number")
         print(lastProgramNumber)
@@ -144,6 +199,14 @@ for index, row in excel_sheet3.iterrows():
                 if DEBUGGING:
                     print("matched grossruntime")
                 LastGrossRunTime = row[IMPORT_COLUMN_LASER_TIJD]
+            if row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME] != '':
+                if DEBUGGING:
+                    print("matched netprocessingtime")
+                LastNetProcessingTime = row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME]
+            if row[IMPORT_COLUMN_LASER_NETRUNTIME] != '':
+                if DEBUGGING:
+                    print("matched netruntime")
+                LastNetRunTime = row[IMPORT_COLUMN_LASER_NETRUNTIME]
         # if not, then it was the end of the plate and we should safe the data en continue to the next plate
         else:
             if DEBUGGING:
@@ -155,6 +218,12 @@ for index, row in excel_sheet3.iterrows():
             programmaNummer = lastProgramNumber
             GrossRunTime = LastGrossRunTime
             LastGrossRunTime = row[IMPORT_COLUMN_LASER_TIJD]
+            NetProcessingTime = LastNetProcessingTime
+            LastNetProcessingTime = row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME]
+            NetRunTime = LastNetRunTime
+            LastNetRunTime = row[IMPORT_COLUMN_LASER_NETRUNTIME]
+            startTime = lastStartTime
+            changeStartTime = 1
 
             # index for knowing where to find the data with the same programnumber in the ERP sheet
             placementIndex2 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == lastProgramNumber].tolist()
@@ -175,13 +244,23 @@ for index, row in excel_sheet3.iterrows():
                 ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
-            if ERPTijd != '':
+            if ERPTijd != '' and GrossRunTime != '':
+                # print(programmaNummer)
+                # print(ERPProgrammanummer)
+                # print(type(GrossRunTime))
+                # print(GrossRunTime)
+                # print(type(ERPTijd))
+                # print(ERPTijd)
                 timeDifference = GrossRunTime - ERPTijd
-            else:
+            elif ERPTijd == '':
                 timeDifference = 'No ERP time'
+            elif GrossRunTime == '':
+                timeDifference = 'No GrossRunTime'
 
             # variable to safe the average in
             avgTimeDistance = 0
+            totalSnijlengte = 0
+            wicamCheck = 0
             # add average time per distance
             # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
             if ERPProgrammanummer != '':
@@ -190,13 +269,16 @@ for index, row in excel_sheet3.iterrows():
                     #  check to see if there is a matching programnumber with the laser machine
                     if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
                         placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
-                        # print(placementIndex3)
-                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
                         for i in placementIndex3:
-                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
                             if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
-                                # print("hoeray")
-                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+                                wicamCheck = 1
+                                totalSnijlengte = totalSnijlengte + ((row[IMPORT_COLUMN_WICAM_SNIJLENGTE]/1000)*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS])
+                if wicamCheck:
+                    avgTimeDistance = ERPTijd/totalSnijlengte
+                else:
+                    avgTimeDistance = 'No Wicam programnumber'
+            else:
+                avgTimeDistance = 'No ERP programnumber'
 
             # create the new row that will have to be added to the dataframe
             new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
@@ -206,8 +288,11 @@ for index, row in excel_sheet3.iterrows():
                        EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
                        EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
                        EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING: NetProcessingTime,
+                       EXPORT_COLUMN_LASER_TIJD_NET_RUN: NetRunTime,
                        EXPORT_COLUMN_LASER_PLAAT: plaatNr,
-                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer,
+                       EXPORT_COLUMN_LASER_STARTTIME: startTime}
             
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
@@ -216,7 +301,9 @@ for index, row in excel_sheet3.iterrows():
         if DEBUGGING:
             print("not a matched program number")
         # if it doesn't have a time then we don't need to safe it
-        if LastGrossRunTime == '':
+        if LastGrossRunTime == '' and LastNetProcessingTime == '' and LastNetRunTime == '':
+            if DEBUGGING:
+                print("No time was saved for this platenr and programnr")
             lastProgramNumber = row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER]
             if row[IMPORT_COLUMN_LASER_PLAAT] != '':
                 LastPlaatNr = row[IMPORT_COLUMN_LASER_PLAAT]
@@ -224,9 +311,11 @@ for index, row in excel_sheet3.iterrows():
                 LastPlaatNr = 0
             LastGrossRunTime = 0
         # if it does have a time then we need to safe it
-        elif LastGrossRunTime != '':
+        elif LastGrossRunTime != '' or LastNetProcessingTime != '' or LastNetRunTime != '':
+            if DEBUGGING:
+                print("It does contain time")
             plaatNr = LastPlaatNr
-            # in case the we continue with a plate that isn't 0
+            # in case that we continue with a plate that isn't 0
             if row[IMPORT_COLUMN_LASER_PLAAT] != '':
                 LastPlaatNr = row[IMPORT_COLUMN_LASER_PLAAT]
             else:
@@ -235,6 +324,12 @@ for index, row in excel_sheet3.iterrows():
             lastProgramNumber = row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER]
             GrossRunTime = LastGrossRunTime
             LastGrossRunTime = row[IMPORT_COLUMN_LASER_TIJD]
+            NetProcessingTime = LastNetProcessingTime
+            LastNetProcessingTime = row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME]
+            NetRunTime = LastNetRunTime
+            LastNetRunTime = row[IMPORT_COLUMN_LASER_NETRUNTIME]
+            startTime = lastStartTime
+            changeStartTime = 1
 
             # index for knowing where to find the data with the same programnumber in the ERP sheet
             placementIndex2 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == programmaNummer].tolist()
@@ -255,13 +350,15 @@ for index, row in excel_sheet3.iterrows():
                 ERPStuks = data.iat[placementIndex2[0],3]
 
             # calculate the time difference between expected and actual
-            if ERPTijd != '':
+            if ERPTijd != '' and GrossRunTime != '':
                 timeDifference = GrossRunTime - ERPTijd
             else:
                 timeDifference = 'No ERP time'
 
             # variable to safe the average in
             avgTimeDistance = 0
+            totalSnijlengte = 0
+            wicamCheck = 0
             # add average time per distance
             # check if the programnumber is present in the ERP, otherwise we don't know how many pieces there are in a plate
             if ERPProgrammanummer != '':
@@ -270,13 +367,16 @@ for index, row in excel_sheet3.iterrows():
                     #  check to see if there is a matching programnumber with the laser machine
                     if row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER] == ERPProgrammanummer:
                         placementIndex3 = excel_sheet1.index[excel_sheet1[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] == row[IMPORT_COLUMN_WICAM_PROGRAMMANUMMER]].tolist()
-                        # print(placementIndex3)
-                        # print(row[IMPORT_COLUMN_WICAM_ORDER_BON])
                         for i in placementIndex3:
-                            # print(excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON])
                             if row[IMPORT_COLUMN_WICAM_ORDER_BON] == excel_sheet1.loc[i, IMPORT_COLUMN_ERP_ORDER_BON]:
-                                # print("hoeray")
-                                avgTimeDistance = avgTimeDistance + (excel_sheet1.loc[i, IMPORT_COLUMN_ERP_TIJD]/(row[IMPORT_COLUMN_WICAM_SNIJLENGTE]*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS]))
+                                wicamCheck = 1
+                                totalSnijlengte = totalSnijlengte + ((row[IMPORT_COLUMN_WICAM_SNIJLENGTE]/1000)*excel_sheet1.loc[i, IMPORT_COLUMN_ERP_STUKS])
+                if wicamCheck:
+                    avgTimeDistance = ERPTijd/totalSnijlengte
+                else:
+                    avgTimeDistance = 'No Wicam programnumber'
+            else:
+                avgTimeDistance = 'No ERP programnumber'
 
             # create the new row that will have to be added to the dataframe
             new_row = {EXPORT_COLUMN_ERP_PROGRAMMANUMMER: ERPProgrammanummer,
@@ -286,11 +386,20 @@ for index, row in excel_sheet3.iterrows():
                        EXPORT_COLUMN_LASER_DIFFERENCE: timeDifference,
                        EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE: avgTimeDistance,
                        EXPORT_COLUMN_LASER_TIJD: GrossRunTime,
+                       EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING: NetProcessingTime,
+                       EXPORT_COLUMN_LASER_TIJD_NET_RUN: NetRunTime,
                        EXPORT_COLUMN_LASER_PLAAT: plaatNr,
-                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer,
+                       EXPORT_COLUMN_LASER_STARTTIME: startTime}
             
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
+        else:
+            if DEBUGGING:
+                print('Something went horribly wrong')
+                print(LastGrossRunTime)
+                print(LastNetProcessingTime)
+                print(LastNetRunTime)
 
     # debugging functions which enables only part of the excel sheet from being checked
     if DEBUGGING:
