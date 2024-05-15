@@ -22,7 +22,7 @@ Data_export_alles_vanaf_2023.xlsx
   │   ├── OrderBon
   │   ├── StuksPerPlaat
   │   └── TijdBonPerPlaat
-  ├── WICAM
+  ├── WiCAM
   │   ├── Programmanummer
   │   ├── OrderBon
   │   └── SnijlengtePerStuk
