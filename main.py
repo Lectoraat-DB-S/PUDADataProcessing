@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 # setup constants
 # put a 1 if debugging should be enabled
 DEBUGGING = 0
-MACHINE_NUMBER = 4
+MACHINE_NUMBER = 3
 NEW_DATA = 1
 if MACHINE_NUMBER != 3 and MACHINE_NUMBER != 4:
     print("wrong machine number used")
@@ -67,6 +67,7 @@ if NEW_DATA:
 else:
     IMPORT_COLUMN_WICAM_SNIJLENGTE = 'SnijlengtePerStuk'
 # sheet 3 LASER
+IMPORT_COLUMN_LASER_STARTTIME = 'Timestamp'
 IMPORT_COLUMN_LASER_TIJD = 'GrossRunTime'
 IMPORT_COLUMN_LASER_PLAAT = 'PlaatNr'
 IMPORT_COLUMN_LASER_PROGRAMMANUMMER = 'ProgrammaNaam'
@@ -92,6 +93,7 @@ if MACHINE_NUMBER == 3:
     EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 3 Actual Time Difference'
     EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING = 'Laser 3 NetProcessingTime'
     EXPORT_COLUMN_LASER_TIJD_NET_RUN = 'Laser 3 NetRunTime'
+    EXPORT_COLUMN_LASER_STARTTIME = 'Laser 3 Start time'
 elif MACHINE_NUMBER == 4:
     EXPORT_COLUMN_LASER_TIJD = 'Laser 4 GrossRunTime'
     EXPORT_COLUMN_LASER_PLAAT = 'Laser 4 Plaatnr'
@@ -99,6 +101,7 @@ elif MACHINE_NUMBER == 4:
     EXPORT_COLUMN_LASER_DIFFERENCE = 'Laser 4 Actual Time Difference'
     EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING = 'Laser 4 NetProcessingTime'
     EXPORT_COLUMN_LASER_TIJD_NET_RUN = 'Laser 4 NetRunTime'
+    EXPORT_COLUMN_LASER_STARTTIME = 'Laser 4 Start time'
 
 # testing constant
 COUNT_THE_AMOUNT = 120 + 2
@@ -110,7 +113,7 @@ excel_sheet2 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME2)
 # Laser excel sheet
 excel_sheet3 = pd.read_excel(FILE_LOCATION, sheet_name=EXCEL_SHEET_NAME3)
 # dataframe that will be filled we the results
-data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_ERP_STUKS, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING, EXPORT_COLUMN_LASER_TIJD_NET_RUN, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER])
+data = pd.DataFrame(columns=[EXPORT_COLUMN_ERP_PROGRAMMANUMMER, EXPORT_COLUMN_ERP_TIJD, EXPORT_COLUMN_ERP_MATERIAAL, EXPORT_COLUMN_ERP_STUKS, EXPORT_COLUMN_WICAM_AVG_TIMEDISTANCE, EXPORT_COLUMN_LASER_DIFFERENCE, EXPORT_COLUMN_LASER_TIJD, EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING, EXPORT_COLUMN_LASER_TIJD_NET_RUN, EXPORT_COLUMN_LASER_PLAAT, EXPORT_COLUMN_LASER_PROGRAMMANUMMER, EXPORT_COLUMN_LASER_STARTTIME])
 
 excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON] = excel_sheet1[IMPORT_COLUMN_ERP_ORDER_BON].str.replace('.', '-')
 
@@ -122,7 +125,7 @@ last_programmanummer = 0
 for index, row in excel_sheet1.iterrows():
     if row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER] != last_programmanummer:
         last_programmanummer = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER]
-        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        data.loc[index_new_data] = row[IMPORT_COLUMN_ERP_PROGRAMMANUMMER], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         index_new_data = index_new_data + 1
 
 # add total time and material found in ERP sheet to all the programnumbers found in ERP sheet
@@ -147,6 +150,9 @@ LastNetRunTime = 0
 NetRunTime = 0
 LastPlaatNr = 0
 plaatNr = 0
+startTime = 0
+lastStartTime = 0
+changeStartTime = 1
 
 # fill empty cells with '' because python can't handle NaN
 excel_sheet3 = excel_sheet3.fillna('')
@@ -164,9 +170,14 @@ counted = 0
 for index, row in excel_sheet3.iterrows():
     if DEBUGGING:
         print("start")
+    # record start time of listing
+    if changeStartTime == 1:
+        lastStartTime = row[IMPORT_COLUMN_LASER_STARTTIME]
+        changeStartTime = 0
     # for the first run safe a number to prevent skipping
     if lastProgramNumber == 0:
         lastProgramNumber = row[IMPORT_COLUMN_LASER_PROGRAMMANUMMER]
+        # lastStartTime = row[IMPORT_COLUMN_LASER_STARTTIME]
     if DEBUGGING:
         print("check for number")
         print(lastProgramNumber)
@@ -211,6 +222,8 @@ for index, row in excel_sheet3.iterrows():
             LastNetProcessingTime = row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME]
             NetRunTime = LastNetRunTime
             LastNetRunTime = row[IMPORT_COLUMN_LASER_NETRUNTIME]
+            startTime = lastStartTime
+            changeStartTime = 1
 
             # index for knowing where to find the data with the same programnumber in the ERP sheet
             placementIndex2 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == lastProgramNumber].tolist()
@@ -278,7 +291,8 @@ for index, row in excel_sheet3.iterrows():
                        EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING: NetProcessingTime,
                        EXPORT_COLUMN_LASER_TIJD_NET_RUN: NetRunTime,
                        EXPORT_COLUMN_LASER_PLAAT: plaatNr,
-                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer,
+                       EXPORT_COLUMN_LASER_STARTTIME: startTime}
             
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
@@ -301,7 +315,7 @@ for index, row in excel_sheet3.iterrows():
             if DEBUGGING:
                 print("It does contain time")
             plaatNr = LastPlaatNr
-            # in case the we continue with a plate that isn't 0
+            # in case that we continue with a plate that isn't 0
             if row[IMPORT_COLUMN_LASER_PLAAT] != '':
                 LastPlaatNr = row[IMPORT_COLUMN_LASER_PLAAT]
             else:
@@ -314,6 +328,8 @@ for index, row in excel_sheet3.iterrows():
             LastNetProcessingTime = row[IMPORT_COLUMN_LASER_NETPROCESSINGTIME]
             NetRunTime = LastNetRunTime
             LastNetRunTime = row[IMPORT_COLUMN_LASER_NETRUNTIME]
+            startTime = lastStartTime
+            changeStartTime = 1
 
             # index for knowing where to find the data with the same programnumber in the ERP sheet
             placementIndex2 = data.index[data[EXPORT_COLUMN_ERP_PROGRAMMANUMMER] == programmaNummer].tolist()
@@ -373,7 +389,8 @@ for index, row in excel_sheet3.iterrows():
                        EXPORT_COLUMN_LASER_TIJD_NET_PROCESSING: NetProcessingTime,
                        EXPORT_COLUMN_LASER_TIJD_NET_RUN: NetRunTime,
                        EXPORT_COLUMN_LASER_PLAAT: plaatNr,
-                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer}
+                       EXPORT_COLUMN_LASER_PROGRAMMANUMMER: programmaNummer,
+                       EXPORT_COLUMN_LASER_STARTTIME: startTime}
             
             # add the new row to the dataframe
             data.loc[len(data)+1] = new_row
