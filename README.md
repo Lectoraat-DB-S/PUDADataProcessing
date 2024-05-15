@@ -22,7 +22,7 @@ Data.xlsx
   │   ├── OrderBon
   │   ├── StuksPerPlaat
   │   └── TijdBonPerPlaat
-  ├── WICAM
+  ├── WiCAM
   │   ├── Programmanummer
   │   ├── OrderBon
   │   └── SnijlengtePerStuk
